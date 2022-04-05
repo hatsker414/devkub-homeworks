@@ -8,7 +8,7 @@
 
 ## Решение задания 1: установить в кластер CNI плагин Calico
 Полиси брал из [kubernetes-for-beginners](https://github.com/aak74/kubernetes-for-beginners/tree/master/16-networking/20-network-policy/templates/network-policy)
-единственноt я поправил deny
+единственное я поправил deny
 
 ```commandline
 ---
