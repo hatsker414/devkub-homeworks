@@ -98,6 +98,168 @@ spec:
 
 ## Решение 2
 
+Создадим namespace "Prod"
+```commandline
+alexp@cp1:~$ sudo kubectl create namespace prod
+namespace/prod created
+```
+создадим yaml файл для деплоя
+
+```commandline
+alexp@cp1:~$ touch prod.yaml
+```
+содерижимое файла
+
+```commandline
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db-prod
+  namespace: prod
+spec:
+  selector:
+     matchLabels:
+       app: db
+  serviceName: "db-svc"
+  replicas: 1
+  template:
+     metadata:
+       labels:
+         app: db
+     spec:
+       terminationGracePeriodSeconds: 10
+       containers:
+       - name: db
+         image: postgres:13-alpine
+         ports:
+         - containerPort: 5432
+         env:
+           - name: POSTGRES_PASSWORD
+             value: postgres
+           - name: POSTGRES_USER
+             value: postgres
+           - name: POSTGRES_DB
+             value: news
+
+# Сервис для базы данных
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-svc
+  namespace: prod
+spec:
+  selector:
+     app: db
+  ports:
+     - protocol: TCP
+       port: 5432
+       targetPort: 5432>              
+
+# Деплоймент бэкенда в отдельный под с сервисом БД в окружении
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deploy
+  namespace: prod
+  labels:
+     app: backend
+spec:
+  replicas: 1
+  selector:
+     matchLabels:
+       app: backend
+  template:
+     metadata:
+       labels:
+         app: backend
+     spec:
+       containers:
+       - name: backend
+         image: hatsker/backend
+         ports:
+         - containerPort: 9000
+         env:
+           - name: DATABASE_URL
+             value: postgres://postgres:postgres@db-svс:5432/news
+
+# Сервис бэкенда
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+  namespace: prod
+spec:
+  selector:
+     app: backend
+  ports:
+     - protocol: TCP
+       port: 9000
+       targetPort: 9000
+
+# Деплоймент фронтенда в отдельный под с сервисом бэкенда в окружении
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deploy
+  namespace: prod
+  labels:
+     app: frontend
+spec:
+  replicas: 1
+  selector:
+     matchLabels:
+       app: frontend
+  template:
+     metadata:
+       labels:
+         app: frontend
+     spec:
+       containers:
+       - name: frontend
+         image: hatsker/frontend
+         ports:
+         - containerPort: 80
+         env:
+           - name: BASE_URL
+             value: http://backend:9000
+
+# Сервис фронтенда
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+  namespace: prod
+spec:
+  selector:
+     app: frontend
+  ports:
+     - name: web
+       protocol: TCP
+       port: 8000
+       targetPort: 80
+```
+задеплоим
+
+```commandline
+alexp@cp1:~$ sudo kubectl create -f prod.yaml -n prod
+statefulset.apps/db-prod created
+service/db-svc created
+deployment.apps/backend-deploy created
+service/backend-svc created
+deployment.apps/frontend-deploy created
+service/frontend-svc created
+```
+### Результат
+
+![2](/img/dz_13_1_2.png)
+
+
 
 
 ## Задание 3 (*): добавить endpoint на внешний ресурс api
