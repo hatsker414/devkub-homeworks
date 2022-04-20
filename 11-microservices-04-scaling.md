@@ -23,7 +23,7 @@
  
 - подойдет kubernetes либо openshift 
 
-###Поддержка контейнеров:
+### Поддержка контейнеров:
 - Kubernetes использует Container Runtime Interface для управления контейнерами
 ### Обеспечивать обнаружение сервисов и маршрутизацию запросов;
 - В Kubernetes используется Kubernetes Service Catalog Sync, также к нему можно прикрутить HashiCorp Consul, чтобы работать с сервисам извне кластера
